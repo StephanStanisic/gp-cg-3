@@ -142,7 +142,9 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <None Include="fragmentshader.frag" />
     <None Include="fragmentshader.fsh" />
+    <None Include="vertexshader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

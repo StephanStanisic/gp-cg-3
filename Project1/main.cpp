@@ -20,8 +20,8 @@ using namespace std;
 
 const int WIDTH = 800, HEIGHT = 600;
 
-const char* fragshader_name = "fragmentshader.fsh";
-const char* vertexshader_name = "vertexshader.vsh";
+const char* fragshader_name = "fragmentshader.frag";
+const char* vertexshader_name = "vertexshader.vert";
 
 unsigned const int DELTA_TIME = 10;
 
@@ -33,13 +33,14 @@ unsigned const int DELTA_TIME = 10;
 // ID's
 GLuint program_id;
 GLuint vao;
+GLuint vbo_normals;
 
 // Uniform ID's
-GLuint uniform_mvp;
+GLuint uniform_mv;
 
 // Matrices
 glm::mat4 model, view, projection;
-glm::mat4 mvp;
+glm::mat4 mv;
 
 
 //--------------------------------------------------------------------------------
@@ -78,10 +79,10 @@ void Render()
 
     // Do transformation
     model = glm::rotate(model, 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
-    mvp = projection * view * model;
+    mv = view * model;
 
     // Send mvp
-    glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv));
 
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
@@ -154,7 +155,7 @@ void InitMatrices()
         glm::radians(45.0f),
         1.0f * WIDTH / HEIGHT, 0.1f,
         20.0f);
-    mvp = projection * view * model;
+    mv = view * model;
 }
 
 
@@ -167,6 +168,7 @@ void InitBuffers()
 {
     GLuint position_id;
     GLuint vbo_vertices;
+    glm::vec3 light_position = glm::vec3(2, 3, 4), ambient_color = glm::vec3(0.1, 0.1, 0.1), diffuse_color = glm::vec3(1, 1, 1);
 
     // vbo for vertices
     glGenBuffers(1, &vbo_vertices);
@@ -176,8 +178,17 @@ void InitBuffers()
         GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // vbo for normals
+    glGenBuffers(1, &vbo_normals);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals);
+    glBufferData(GL_ARRAY_BUFFER,
+        normals.size() * sizeof(glm::vec3),
+        &normals[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     // Get vertex attributes
     position_id = glGetAttribLocation(program_id, "position");
+    GLuint normal_id = glGetAttribLocation(program_id, "normal");
 
     // Allocate memory for vao
     glGenVertexArrays(1, &vao);
@@ -191,18 +202,34 @@ void InitBuffers()
     glEnableVertexAttribArray(position_id);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // Bind normals to vao
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals);
+    glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(normal_id);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     // Stop bind to vao
     glBindVertexArray(0);
 
     // Make uniform vars
-    uniform_mvp = glGetUniformLocation(program_id, "mvp");
+    uniform_mv = glGetUniformLocation(program_id, "mv");
+    GLuint uniform_proj = glGetUniformLocation(program_id, "projection");
+    GLuint uniform_light_pos = glGetUniformLocation(program_id, "light_pos");
+    GLuint uniform_material_ambient = glGetUniformLocation(program_id,
+        "mat_ambient");
+    GLuint uniform_material_diffuse = glGetUniformLocation(program_id,
+        "mat_diffuse"); 
 
     // Define model
-    mvp = projection * view * model;
+    mv = view * model;
 
     // Send mvp
     glUseProgram(program_id);
-    glUniformMatrix4fv(uniform_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+    glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv));
+    glUniformMatrix4fv(uniform_proj, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform3fv(uniform_light_pos, 1, glm::value_ptr(light_position));
+    glUniform3fv(uniform_material_ambient, 1, glm::value_ptr(ambient_color));
+    glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(diffuse_color));
 }
 
 
