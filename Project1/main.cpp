@@ -45,7 +45,8 @@ GLuint uniform_mv;
 // Matrices
 glm::mat4 model, view, projection;
 glm::mat4 mv;
-
+glm::vec3 specular = glm::vec3(0.7, 0.7, 0.7);
+float power = 1024;
 
 //--------------------------------------------------------------------------------
 // Mesh variables
@@ -239,6 +240,10 @@ void InitBuffers()
         "mat_ambient");
     GLuint uniform_material_diffuse = glGetUniformLocation(program_id,
         "mat_diffuse"); 
+    GLuint uniform_specular = glGetUniformLocation(
+        program_id, "mat_specular");
+    GLuint uniform_material_power = glGetUniformLocation(
+        program_id, "mat_power");
 
     // Define model
     mv = view * model;
@@ -250,6 +255,8 @@ void InitBuffers()
     glUniform3fv(uniform_light_pos, 1, glm::value_ptr(light_position));
     glUniform3fv(uniform_material_ambient, 1, glm::value_ptr(ambient_color));
     glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(diffuse_color));
+    glUniform3fv(uniform_specular, 1, glm::value_ptr(specular));
+    glUniform1f(uniform_material_power, power);
 }
 
 void InitObjects() {
