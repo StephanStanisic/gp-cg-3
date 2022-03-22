@@ -11,6 +11,8 @@
 #include "glsl.h"
 #include "objloader.h"
 
+#include "texture.h"
+
 using namespace std;
 
 
@@ -33,7 +35,9 @@ unsigned const int DELTA_TIME = 10;
 // ID's
 GLuint program_id;
 GLuint vao;
+GLuint vbo_uvs;
 GLuint vbo_normals;
+GLuint texture_id;
 
 // Uniform ID's
 GLuint uniform_mv;
@@ -51,7 +55,6 @@ vector<glm::vec3> normals;
 vector<glm::vec3> vertices;
 vector<glm::vec2> uvs;
 
-bool res = loadOBJ("box.obj", vertices, uvs, normals);
 
 
 //--------------------------------------------------------------------------------
@@ -84,7 +87,9 @@ void Render()
     // Send mvp
     glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv));
 
+
     glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     glBindVertexArray(0);
 
@@ -168,7 +173,7 @@ void InitBuffers()
 {
     GLuint position_id;
     GLuint vbo_vertices;
-    glm::vec3 light_position = glm::vec3(2, 3, 4), ambient_color = glm::vec3(0.2, 0.2, 0.1), diffuse_color = glm::vec3(0.5, 0.5, 0.3);
+    glm::vec3 light_position = glm::vec3(2, 3, 4), ambient_color = glm::vec3(0.2, 0.2, 0.1), diffuse_color = glm::vec3(0, 0, 0);
 
 
     // vbo for vertices
@@ -187,9 +192,17 @@ void InitBuffers()
         &normals[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    glGenBuffers(1, &vbo_uvs);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs);
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2),
+        &uvs[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
     // Get vertex attributes
     position_id = glGetAttribLocation(program_id, "position");
     GLuint normal_id = glGetAttribLocation(program_id, "normal");
+    GLuint uv_id = glGetAttribLocation(program_id, "uv");
 
     // Allocate memory for vao
     glGenVertexArrays(1, &vao);
@@ -207,6 +220,12 @@ void InitBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, vbo_normals);
     glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(normal_id);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // uv maps
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs);
+    glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(uv_id);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Stop bind to vao
@@ -233,12 +252,18 @@ void InitBuffers()
     glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(diffuse_color));
 }
 
+void InitObjects() {
+    bool res = loadOBJ("teapot.obj", vertices, uvs, normals);
+    texture_id = loadBMP("uvtemplate.bmp"); // Heeft GLUT/GLEW nodig!
+}
+
 
 int main(int argc, char** argv)
 {
     InitGlutGlew(argc, argv);
     InitShaders();
     InitMatrices();
+    InitObjects();
     InitBuffers();
 
     glEnable(GL_DEPTH_TEST);

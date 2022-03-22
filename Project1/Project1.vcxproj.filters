@@ -24,6 +24,9 @@
     <ClCompile Include="objloader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glsl.h">
@@ -32,13 +35,12 @@
     <ClInclude Include="objloader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragmentshader.fsh" />
     <None Include="fragmentshader.frag" />
     <None Include="vertexshader.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="vertexshader.vsh" />
   </ItemGroup>
 </Project>
