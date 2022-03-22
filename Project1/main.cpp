@@ -51,7 +51,7 @@ vector<glm::vec3> normals;
 vector<glm::vec3> vertices;
 vector<glm::vec2> uvs;
 
-bool res = loadOBJ("teapot.obj", vertices, uvs, normals);
+bool res = loadOBJ("box.obj", vertices, uvs, normals);
 
 
 //--------------------------------------------------------------------------------
@@ -168,7 +168,8 @@ void InitBuffers()
 {
     GLuint position_id;
     GLuint vbo_vertices;
-    glm::vec3 light_position = glm::vec3(2, 3, 4), ambient_color = glm::vec3(0.1, 0.1, 0.1), diffuse_color = glm::vec3(1, 1, 1);
+    glm::vec3 light_position = glm::vec3(2, 3, 4), ambient_color = glm::vec3(0.2, 0.2, 0.1), diffuse_color = glm::vec3(0.5, 0.5, 0.3);
+
 
     // vbo for vertices
     glGenBuffers(1, &vbo_vertices);
