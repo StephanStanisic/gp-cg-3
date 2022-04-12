@@ -27,6 +27,8 @@ const char* vertexshader_name = "vertexshader.vert";
 
 unsigned const int DELTA_TIME = 10;
 
+constexpr auto NUMBER_OF_OBJECTS = 2;
+
 
 //--------------------------------------------------------------------------------
 // Variables
@@ -34,10 +36,10 @@ unsigned const int DELTA_TIME = 10;
 
 // ID's
 GLuint program_id;
-GLuint vao[3];
-GLuint vbo_uvs[3];
-GLuint vbo_normals[3];
-GLuint texture_id[3];
+GLuint vao[NUMBER_OF_OBJECTS];
+GLuint vbo_uvs[NUMBER_OF_OBJECTS];
+GLuint vbo_normals[NUMBER_OF_OBJECTS];
+GLuint texture_id[NUMBER_OF_OBJECTS];
 
 // Uniform ID's
 GLuint uniform_mv;
@@ -50,24 +52,24 @@ GLuint uniform_material_power;
 
 
 GLuint position_id;
-GLuint vbo_vertices[3];
+GLuint vbo_vertices[NUMBER_OF_OBJECTS];
 glm::vec3 light_position,
-    ambient_color[3],
-    diffuse_color[3];
+    ambient_color[NUMBER_OF_OBJECTS],
+    diffuse_color[NUMBER_OF_OBJECTS];
 
 // Matrices
-glm::mat4 model[3], view, projection;
-glm::mat4 mv[3];
-glm::vec3 specular[3];
-float power[3];
+glm::mat4 model[NUMBER_OF_OBJECTS], view, projection;
+glm::mat4 mv[NUMBER_OF_OBJECTS];
+glm::vec3 specular[NUMBER_OF_OBJECTS];
+float power[NUMBER_OF_OBJECTS];
 
 //--------------------------------------------------------------------------------
 // Mesh variables
 //--------------------------------------------------------------------------------
 
-vector<glm::vec3> normals[3];
-vector<glm::vec3> vertices[3];
-vector<glm::vec2> uvs[3];
+vector<glm::vec3> normals[NUMBER_OF_OBJECTS];
+vector<glm::vec3> vertices[NUMBER_OF_OBJECTS];
+vector<glm::vec2> uvs[NUMBER_OF_OBJECTS];
 
 
 
@@ -94,7 +96,7 @@ void Render()
     // Attach to program_id
     glUseProgram(program_id);
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
         // Send mvp
         glUseProgram(program_id);
         glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
@@ -197,7 +199,7 @@ void InitBuffers()
 
     position_id = glGetAttribLocation(program_id, "position");
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
 
         // vbo for vertices
         glGenBuffers(1, &(vbo_vertices[i]));
