@@ -13,6 +13,27 @@
 
 #include "texture.h"
 
+void CheckOpenGLError(const char* stmt, const char* fname, int line)
+{
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        const char* gl_errors[10] = { "GL_INVALID_ENUM" ,"GL_INVALID_VALUE","GL_INVALID_OPERATION","GL_STACK_OVERFLOW","GL_STACK_UNDERFLOW","GL_OUT_OF_MEMORY","GL_INVALID_FRAMEBUFFER_OPERATION" };
+        printf("OpenGL error %08x (%s), at %s:%i - for %s\n", err, gl_errors[err - 0x0500], fname, line, stmt);
+        abort();
+    }
+}
+
+#ifdef _DEBUG
+#define GL_CHECK(stmt) do { \
+            stmt; \
+            CheckOpenGLError(#stmt, __FILE__, __LINE__); \
+        } while (0)
+#else
+#define GL_CHECK(stmt) stmt
+#endif
+
+
 using namespace std;
 
 
@@ -90,37 +111,37 @@ void keyboardHandler(unsigned char key, int a, int b)
 
 void Render()
 {
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GL_CHECK(glClearColor(0.0, 0.0, 0.0, 1.0));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     // Attach to program_id
-    glUseProgram(program_id);
+    GL_CHECK(glUseProgram(program_id));
 
     for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
         // Send mvp
-        glUseProgram(program_id);
-        glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
-        glUniformMatrix4fv(uniform_proj, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3fv(uniform_light_pos, 1, glm::value_ptr(light_position));
-        glUniform3fv(uniform_material_ambient, 1, glm::value_ptr(ambient_color[i]));
-        glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(diffuse_color[i]));
-        glUniform3fv(uniform_specular, 1, glm::value_ptr(specular[i]));
-        glUniform1f(uniform_material_power, power[i]);
+        GL_CHECK(glUseProgram(program_id));
+        GL_CHECK(glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i])));
+        GL_CHECK(glUniformMatrix4fv(uniform_proj, 1, GL_FALSE, glm::value_ptr(projection)));
+        GL_CHECK(glUniform3fv(uniform_light_pos, 1, glm::value_ptr(light_position)));
+        GL_CHECK(glUniform3fv(uniform_material_ambient, 1, glm::value_ptr(ambient_color[i])));
+        GL_CHECK(glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(diffuse_color[i])));
+        GL_CHECK(glUniform3fv(uniform_specular, 1, glm::value_ptr(specular[i])));
+        GL_CHECK(glUniform1f(uniform_material_power, power[i]));
 
         // Do transformation
         model[i] = glm::rotate(model[i], 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
         mv[i] = view * model[i];
 
         // Send mvp
-        glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
+        GL_CHECK(glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i])));
 
-        glBindVertexArray(vao[i]);
-        glBindTexture(GL_TEXTURE_2D, texture_id[i]);
-        glDrawArrays(GL_TRIANGLES, 0, vertices[i].size());
-        glBindVertexArray(0);
+        GL_CHECK(glBindVertexArray(vao[i]));
+        GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture_id[i]));
+        GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, vertices[i].size()));
+        GL_CHECK(glBindVertexArray(0));
     }
 
-    glutSwapBuffers();
+    GL_CHECK(glutSwapBuffers());
 }
 
 
@@ -132,7 +153,7 @@ void Render()
 void Render(int n)
 {
     Render();
-    glutTimerFunc(DELTA_TIME, Render, 0);
+    GL_CHECK(glutTimerFunc(DELTA_TIME, Render, 0));
 }
 
 
@@ -143,15 +164,15 @@ void Render(int n)
 
 void InitGlutGlew(int argc, char** argv)
 {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Hello OpenGL");
-    glutDisplayFunc(Render);
-    glutKeyboardFunc(keyboardHandler);
-    glutTimerFunc(DELTA_TIME, Render, 0);
+    GL_CHECK(glutInit(&argc, argv));
+    GL_CHECK(glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH));
+    GL_CHECK(glutInitWindowSize(WIDTH, HEIGHT));
+    GL_CHECK(glutCreateWindow("Hello OpenGL"));
+    GL_CHECK(glutDisplayFunc(Render));
+    GL_CHECK(glutKeyboardFunc(keyboardHandler));
+    GL_CHECK(glutTimerFunc(DELTA_TIME, Render, 0));
 
-    glewInit();
+    GL_CHECK(glewInit());
 }
 
 
@@ -162,13 +183,17 @@ void InitGlutGlew(int argc, char** argv)
 
 void InitShaders()
 {
-    char* vertexshader = glsl::readFile(vertexshader_name);
-    GLuint vsh_id = glsl::makeVertexShader(vertexshader);
+    char* vertexshader;
+    GL_CHECK(vertexshader = glsl::readFile(vertexshader_name));
+    GLuint vsh_id;
+    GL_CHECK(vsh_id = glsl::makeVertexShader(vertexshader));
 
-    char* fragshader = glsl::readFile(fragshader_name);
-    GLuint fsh_id = glsl::makeFragmentShader(fragshader);
+    char* fragshader;
+    GL_CHECK(fragshader = glsl::readFile(fragshader_name));
+    GLuint fsh_id;
+    GL_CHECK(fsh_id = glsl::makeFragmentShader(fragshader));
 
-    program_id = glsl::makeShaderProgram(vsh_id, fsh_id);
+    GL_CHECK(program_id = glsl::makeShaderProgram(vsh_id, fsh_id));
 }
 
 
@@ -197,73 +222,75 @@ void InitMatrices()
 void InitBuffers()
 {
 
-    position_id = glGetAttribLocation(program_id, "position");
+    GL_CHECK(position_id = glGetAttribLocation(program_id, "position"));
 
     for (int i = 0; i < NUMBER_OF_OBJECTS; i++) {
 
         // vbo for vertices
-        glGenBuffers(1, &(vbo_vertices[i]));
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]);
-        glBufferData(GL_ARRAY_BUFFER,
+        GL_CHECK(glGenBuffers(1, &(vbo_vertices[i])));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER,
             vertices[i].size() * sizeof(glm::vec3), &vertices[i][0],
-            GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+            GL_STATIC_DRAW));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         // vbo for normals
-        glGenBuffers(1, &(vbo_normals[i]));
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
-        glBufferData(GL_ARRAY_BUFFER,
+        GL_CHECK(glGenBuffers(1, &(vbo_normals[i])));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER,
             normals[i].size() * sizeof(glm::vec3),
-            &normals[i][0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+            &normals[i][0], GL_STATIC_DRAW));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-        glGenBuffers(1, &(vbo_uvs[i]));
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]);
-        glBufferData(GL_ARRAY_BUFFER, uvs[i].size() * sizeof(glm::vec2),
-            &uvs[i][0], GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK(glGenBuffers(1, &(vbo_uvs[i])));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]));
+        GL_CHECK(glBufferData(GL_ARRAY_BUFFER, uvs[i].size() * sizeof(glm::vec2),
+            &uvs[i][0], GL_STATIC_DRAW));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
 
         // Get vertex attributes
-        GLuint normal_id = glGetAttribLocation(program_id, "normal");
-        GLuint uv_id = glGetAttribLocation(program_id, "uv");
+        GLuint normal_id;
+        GL_CHECK(normal_id = glGetAttribLocation(program_id, "normal"));
+        GLuint uv_id;
+        GL_CHECK(uv_id = glGetAttribLocation(program_id, "uv"));
 
         // Allocate memory for vao
-        glGenVertexArrays(1, &(vao[i]));
+        GL_CHECK(glGenVertexArrays(1, &(vao[i])));
 
         // Bind to vao
-        glBindVertexArray(vao[i]);
+        GL_CHECK(glBindVertexArray(vao[i]));
 
         // Bind vertices to vao
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]);
-        glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(position_id);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]));
+        GL_CHECK(glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0));
+        GL_CHECK(glEnableVertexAttribArray(position_id));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         // Bind normals to vao
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
-        glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(normal_id);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]));
+        GL_CHECK(glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0));
+        GL_CHECK(glEnableVertexAttribArray(normal_id));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         // uv maps
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]);
-        glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        glEnableVertexAttribArray(uv_id);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]));
+        GL_CHECK(glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0, 0));
+        GL_CHECK(glEnableVertexAttribArray(uv_id));
+        GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
         // Stop bind to vao
-        glBindVertexArray(0);
+        GL_CHECK(glBindVertexArray(0));
     }
 
     // Make uniform vars
-    uniform_mv = glGetUniformLocation(program_id, "mv");
-    uniform_proj = glGetUniformLocation(program_id, "projection");
-    uniform_light_pos = glGetUniformLocation(program_id, "light_pos");
-    uniform_material_ambient = glGetUniformLocation(program_id, "mat_ambient");
-    uniform_material_diffuse = glGetUniformLocation(program_id, "mat_diffuse"); 
-    uniform_specular = glGetUniformLocation(program_id, "mat_specular");
-    uniform_material_power = glGetUniformLocation(program_id, "mat_power");
+    GL_CHECK(uniform_mv = glGetUniformLocation(program_id, "mv"));
+    GL_CHECK(uniform_proj = glGetUniformLocation(program_id, "projection"));
+    GL_CHECK(uniform_light_pos = glGetUniformLocation(program_id, "light_pos"));
+    GL_CHECK(uniform_material_ambient = glGetUniformLocation(program_id, "mat_ambient"));
+    GL_CHECK(uniform_material_diffuse = glGetUniformLocation(program_id, "mat_diffuse"));
+    GL_CHECK(uniform_specular = glGetUniformLocation(program_id, "mat_specular"));
+    GL_CHECK(uniform_material_power = glGetUniformLocation(program_id, "mat_power"));
 }
 
 void InitObjects() {
@@ -298,12 +325,12 @@ int main(int argc, char** argv)
     InitMaterials();
     InitBuffers();
 
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    GL_CHECK(glEnable(GL_DEPTH_TEST));
+    GL_CHECK(glDisable(GL_CULL_FACE));
 
     // Hide console window
     HWND hWnd = GetConsoleWindow();
-    ShowWindow(hWnd, SW_HIDE);
+    ShowWindow(hWnd, SW_SHOW);
 
     // Main loop
     glutMainLoop();
