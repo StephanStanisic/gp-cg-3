@@ -94,7 +94,7 @@ void Render()
     // Attach to program_id
     glUseProgram(program_id);
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
         // Send mvp
         glUseProgram(program_id);
         glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
@@ -176,7 +176,6 @@ void InitShaders()
 
 void InitMatrices()
 {
-    model[0] = glm::mat4();
     view = glm::lookAt(
         glm::vec3(2.0, 2.0, 7.0),  // eye
         glm::vec3(0.0, 0.0, 0.0),  // center
@@ -185,7 +184,6 @@ void InitMatrices()
         glm::radians(45.0f),
         1.0f * WIDTH / HEIGHT, 0.1f,
         20.0f);
-    mv[0] = view * model[0];
 }
 
 
@@ -197,61 +195,64 @@ void InitMatrices()
 void InitBuffers()
 {
 
-
-    // vbo for vertices
-    glGenBuffers(1, &(vbo_vertices[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-        vertices[0].size() * sizeof(glm::vec3), &vertices[0][0],
-        GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // vbo for normals
-    glGenBuffers(1, &(vbo_normals[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[0]);
-    glBufferData(GL_ARRAY_BUFFER,
-        normals[0].size() * sizeof(glm::vec3),
-        &normals[0][0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenBuffers(1, &(vbo_uvs[0]));
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[0]);
-    glBufferData(GL_ARRAY_BUFFER, uvs[0].size() * sizeof(glm::vec2),
-        &uvs[0][0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-    // Get vertex attributes
     position_id = glGetAttribLocation(program_id, "position");
-    GLuint normal_id = glGetAttribLocation(program_id, "normal");
-    GLuint uv_id = glGetAttribLocation(program_id, "uv");
 
-    // Allocate memory for vao
-    glGenVertexArrays(1, &(vao[0]));
+    for (int i = 0; i < 2; i++) {
 
-    // Bind to vao
-    glBindVertexArray(vao[0]);
+        // vbo for vertices
+        glGenBuffers(1, &(vbo_vertices[i]));
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]);
+        glBufferData(GL_ARRAY_BUFFER,
+            vertices[i].size() * sizeof(glm::vec3), &vertices[i][0],
+            GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Bind vertices to vao
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[0]);
-    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(position_id);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // vbo for normals
+        glGenBuffers(1, &(vbo_normals[i]));
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
+        glBufferData(GL_ARRAY_BUFFER,
+            normals[i].size() * sizeof(glm::vec3),
+            &normals[i][0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Bind normals to vao
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[0]);
-    glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(normal_id);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glGenBuffers(1, &(vbo_uvs[i]));
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]);
+        glBufferData(GL_ARRAY_BUFFER, uvs[i].size() * sizeof(glm::vec2),
+            &uvs[i][0], GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // uv maps
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[0]);
-    glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(uv_id);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Stop bind to vao
-    glBindVertexArray(0);
+        // Get vertex attributes
+        GLuint normal_id = glGetAttribLocation(program_id, "normal");
+        GLuint uv_id = glGetAttribLocation(program_id, "uv");
+
+        // Allocate memory for vao
+        glGenVertexArrays(1, &(vao[i]));
+
+        // Bind to vao
+        glBindVertexArray(vao[i]);
+
+        // Bind vertices to vao
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]);
+        glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(position_id);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Bind normals to vao
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
+        glVertexAttribPointer(normal_id, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(normal_id);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // uv maps
+        glBindBuffer(GL_ARRAY_BUFFER, vbo_uvs[i]);
+        glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(uv_id);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // Stop bind to vao
+        glBindVertexArray(0);
+    }
 
     // Make uniform vars
     uniform_mv = glGetUniformLocation(program_id, "mv");
@@ -266,14 +267,23 @@ void InitBuffers()
 void InitObjects() {
     bool res = loadOBJ("teapot.obj", vertices[0], uvs[0], normals[0]);
     texture_id[0] = loadBMP("uvtemplate.bmp"); // Heeft GLUT/GLEW nodig!
+
+    bool res2 = loadOBJ("torus.obj", vertices[1], uvs[1], normals[1]);
+    texture_id[1] = loadBMP("Yellobrk.bmp"); // Heeft GLUT/GLEW nodig!
 }
 
 void InitMaterials() {
     light_position = glm::vec3(4, 4, 4);
+
     ambient_color[0] = glm::vec3(0.2, 0.2, 0.1);
     diffuse_color[0] = glm::vec3(0.5, 0.5, 0.3);
     specular[0] = glm::vec3(0.7, 0.7, 0.7);
     power[0] = 1024;
+
+    ambient_color[1] = glm::vec3(0.2, 0.2, 0.1);
+    diffuse_color[1] = glm::vec3(0.5, 0.5, 0.3);
+    specular[1] = glm::vec3(0.7, 0.7, 0.7);
+    power[1] = 1024;
 }
 
 
